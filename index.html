@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>个人 GSync 登录</title>
+<style>body{font:18px/1.7 system-ui;max-width:42rem;margin:12vh auto;padding:24px}a{color:#6343ba}button,a.button{display:inline-block;padding:12px 20px;background:#6343ba;color:white;border-radius:8px;text-decoration:none}[hidden]{display:none}</style>
+<main><h1 id="title">个人 GSync 登录</h1><p id="message">在 Obsidian 的 GSync 设置中开始 Google 登录。此页面用于将登录结果交回本机 Obsidian。</p><a class="button" id="return" hidden>返回 Obsidian</a><p><a href="privacy.html">隐私说明</a> · <a href="terms.html">使用说明</a></p></main>
+<script>
+const parameters = new URLSearchParams(location.search);
+const authorizationCode = parameters.get('code');
+const authorizationState = parameters.get('state');
+const authorizationError = parameters.get('error');
+history.replaceState(null, '', location.pathname);
+const message = document.getElementById('message');
+const returnLink = document.getElementById('return');
+if (authorizationError) {
+  message.textContent = 'Google 登录未完成。请返回 Obsidian 重新发起登录。';
+} else if (authorizationCode && authorizationState) {
+  try {
+    const vaultEncoding = authorizationState.split('~')[1];
+    if (!vaultEncoding) throw new Error('Missing vault');
+    const normalized = vaultEncoding.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const vault = new TextDecoder('utf-8', {fatal:true}).decode(Uint8Array.from(atob(padded), character => character.charCodeAt(0)));
+    const callback = new URL('obsidian://gsync-auth');
+    callback.searchParams.set('vault', vault);
+    callback.searchParams.set('code', authorizationCode);
+    callback.searchParams.set('state', authorizationState);
+    returnLink.href = callback.href;
+    returnLink.hidden = false;
+    message.textContent = 'Google 已返回登录结果。点击按钮，在发起登录的设备上交回 Obsidian 完成验证。';
+  } catch {
+    message.textContent = '登录参数不完整。请从 Obsidian 重新发起登录。';
+  }
+}
+</script></html>

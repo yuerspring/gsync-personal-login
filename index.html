@@ -23,7 +23,7 @@ if (authorizationError) {
     callback.searchParams.set('vault', vault);
     callback.searchParams.set('code', authorizationCode);
     callback.searchParams.set('state', authorizationState);
-    returnLink.href = callback.href;
+    returnLink.href = callback.href.replace(/\+/g, '%20');
     returnLink.hidden = false;
     message.textContent = 'Google 已返回登录结果。点击按钮，在发起登录的设备上交回 Obsidian 完成验证。';
   } catch {
